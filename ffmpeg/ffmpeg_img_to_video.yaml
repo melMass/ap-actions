@@ -21,6 +21,7 @@ action:
     ffmpeg_win: "${yamlDir}/ffmpeg.exe"
     ffmpeg_mac: "/usr/local/bin/ffmpeg"
     fps: "25"
+    prores: false
 
   #Where to register this action: on all files matching the filter
   register:
