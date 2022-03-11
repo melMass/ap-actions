@@ -1,0 +1,29 @@
+#Anchorpoint Markup Language
+#Predefined Variables: e.g. ${path}
+#Environment Variables: e.g. ${MY_VARIABLE}
+#Full documentation: https://docs.anchorpoint.app/Actions/Reference
+
+version: "1.0"
+
+action:
+  #Must Have Properties
+  name: "FFmpeg / Sequence to Video (ProRes 4444)"
+
+  #Optional Properties
+  version: 1
+  id: "ap::ffmpeg::seqtovideoprores"
+  category: "ffmpeg/video"
+  type: python
+  author: "Mel Massadian"
+
+  script: "ffmpeg_img_to_video.py"
+  inputs:
+    ffmpeg_win: "${yamlDir}/ffmpeg.exe"
+    ffmpeg_mac: "/usr/local/bin/ffmpeg"
+    fps: "25"
+    prores: true
+
+  #Where to register this action: on all files matching the filter
+  register:
+    file:
+      filter: "*.png;*.exr;*.jpg;*.jpeg;*.tif;*.tiff" #Wildcard matching

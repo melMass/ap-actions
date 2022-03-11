@@ -1,3 +1,4 @@
+import json
 import anchorpoint as ap
 from sys import platform
 import subprocess
@@ -7,7 +8,9 @@ import string
 
 ui = ap.UI()
 ctx = ap.Context.instance()
-
+use_prores = False
+if ctx.inputs["prores"] == "true":
+    use_prores = True
 try:
     filename = ctx.filename.split("_")
     filename.pop()
@@ -18,11 +21,11 @@ except:
 is_exr = "exr" in ctx.suffix
 
 def create_random_text():
-    ran = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))    
+    ran = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))
     return str(ran)
 
 def concat_demuxer(selected_files, fps):
-    # Create a file for ffmpeg within Anchorpoints temp directory. 
+    # Create a file for ffmpeg within Anchorpoints temp directory.
     # Use a random name so that we do not conflict with any other file
     output = os.path.join(ctx.folder, f"{create_random_text()}.txt")
 
@@ -43,9 +46,9 @@ def ffmpeg_seq_to_video(ffmpeg_path, selected_files, target_folder, fps):
 
     # Provide FFmpeg with the set of selected files through the concat demuxer
     concat_file = concat_demuxer(selected_files, fps)
-
+    ext = "mov" if use_prores else "mp4"
     arguments = [
-            ffmpeg_path,                
+            ffmpeg_path,
             "-y",
             "-f", "concat",
             "-safe", "0",
@@ -53,11 +56,21 @@ def ffmpeg_seq_to_video(ffmpeg_path, selected_files, target_folder, fps):
             "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2",
             "-vsync", "vfr",
             "-pix_fmt", "yuv420p",
-            os.path.join(target_folder,f"{filename}.mp4"),
+            os.path.join(target_folder,f"{filename}.{ext}"),
         ]
     if is_exr:
         arguments.insert(1,"-apply_trc")
         arguments.insert(2,"iec61966_2_1")
+    if use_prores:
+        filepth = arguments.pop()
+        arguments.append("-vcodec")
+        arguments.append("prores_ks")
+        arguments.append("-profile:v")
+        arguments.append("4444")
+        arguments.append("-alpha_bits")
+        arguments.append("16")
+        arguments[arguments.index("-pix_fmt") + 1] = "yuva444p10le"
+        arguments.append(filepth)
 
     ffmpeg = subprocess.run(
         arguments, capture_output=True
